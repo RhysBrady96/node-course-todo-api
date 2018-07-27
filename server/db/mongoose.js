@@ -7,6 +7,6 @@ mongoose.Promise = global.Promise;
 // Before it EVER tries to perform a query
 
 // Means we dont have to micromanage the order of things, mongoose takes care of that for us
-mongoose.connect("mongodb://localhost:27017/TodoApp");
+mongoose.connect("mongodb://localhost:27017/TodoApp", {useNewUrlParser  : true});
 
 module.exports.mongoose = mongoose;
