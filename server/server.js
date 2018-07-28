@@ -90,7 +90,7 @@ app.delete("/todos/:todoId", (req,res) => {
     ).catch((e) => {
         res.status(400).send();
     })
-})
+});
 
 
 
