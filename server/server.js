@@ -64,10 +64,32 @@ app.get("/todos/:todoId", (req, res) => {
                 // Try and always send stuff back in an object because it leaves more room for modification :P
                 res.send({todo});
             }
-        },
+        }
     ).catch((e) => {
         res.status(400).send();
     })  
+});
+
+
+
+app.delete("/todos/:todoId", (req,res) => {
+    var requestedId = req.params.todoId;
+    if(!ObjectID.isValid(requestedId)){
+        return res.status(404).send();
+    }
+    Todo.findByIdAndRemove(requestedId).then(
+        // Where doc is the todo to delete
+        (doc) => {
+            if(!doc) {
+                res.status(404).send();
+            }
+            else {
+                res.send({doc});
+            }
+        }
+    ).catch((e) => {
+        res.status(400).send();
+    })
 })
 
 
