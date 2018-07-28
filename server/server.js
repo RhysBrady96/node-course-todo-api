@@ -11,6 +11,10 @@ var {User} =require("./models/User");
 
 var app = express();
 
+// Will only be set if the app IS running on Heroku,
+// It WONT be set if the app is running locally
+const port = process.env.PORT || 3000;
+
 // app.user creates our middleware from the bodyParser.json function
 app.use(bodyParser.json());
 
@@ -69,8 +73,8 @@ app.get("/todos/:todoId", (req, res) => {
 
 
 
-app.listen(3000, () => {
-    console.log("Started on port 3000");
+app.listen(port, () => {
+    console.log(`Started on port ${port}`);
 });
 
 module.exports = {app};

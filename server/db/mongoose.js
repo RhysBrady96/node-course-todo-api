@@ -7,6 +7,9 @@ mongoose.Promise = global.Promise;
 // Before it EVER tries to perform a query
 
 // Means we dont have to micromanage the order of things, mongoose takes care of that for us
-mongoose.connect("mongodb://localhost:27017/TodoApp", {useNewUrlParser  : true});
+// Note, the OR process.env.MONGODB_URI will work only if the app is running on Heroku
+// AND the mLab Addon is included in the heroku instance
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/TodoApp", 
+    {useNewUrlParser  : true});
 
 module.exports.mongoose = mongoose;
