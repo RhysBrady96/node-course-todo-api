@@ -1,9 +1,11 @@
-var express = require("express");
+
+const _ = require("lodash");
+const express = require("express");
 
 // Body-parser lets us send JSON to the server, which the server can do somethign with
 // Body-parser converts the String body into a JSON object
-var bodyParser = require("body-parser");
-var {ObjectID} = require("mongodb");
+const bodyParser = require("body-parser");
+const {ObjectID} = require("mongodb");
 
 var {mongoose} = require("./db/mongoose");
 var {Todo} = require("./models/Todo");
@@ -91,6 +93,34 @@ app.delete("/todos/:todoId", (req,res) => {
         res.status(400).send();
     })
 });
+
+app.patch("/todos/:todoId", (req, res) => {
+    var id = req.params.todoId;
+    // _.pick is  a lodash function that takes an object, and an array of properties that you want to pull off
+    // (If they exist) 
+    // Stops users from just updating anything they choose, e.g. dont want them changing bank account balance
+    var body = _.pick(req.body, ["text", "completed"]);
+    if(!ObjectID.isValid(id)){
+        return res.status(404).send();
+    }
+    
+    if(_.isBoolean(body.completed) && body.completed) {
+        body.completedAt = new Date().getTime();
+    } else {
+        body.completed = false;
+        body.completedAt = null;
+    }
+
+    // Using the $set keyword again, like in cthe mongodb-update file
+    Todo.findByIdAndUpdate(id, { $set : body}, {new : true}).then( (todo) => {
+        if(!todo) {
+            return res.status(404).send();
+        }
+        res.send({todo});
+    }).catch((e) => {
+        res.status(400).send();
+    });
+})
 
 
 
