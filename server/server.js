@@ -3,6 +3,7 @@ var express = require("express");
 // Body-parser lets us send JSON to the server, which the server can do somethign with
 // Body-parser converts the String body into a JSON object
 var bodyParser = require("body-parser");
+var {ObjectID} = require("mongodb");
 
 var {mongoose} = require("./db/mongoose");
 var {Todo} = require("./models/Todo");
@@ -41,6 +42,28 @@ app.get("/todos", (req, res) => {
             res.status(400).send(e);
         }
     )
+});
+
+// The text after the colon creates a "todoId" variable, which allows user to specify a certain ID
+// They want to search for
+// It is a search parameter
+app.get("/todos/:todoId", (req, res) => {
+    var requestedId = req.params.todoId;
+    if(!ObjectID.isValid(requestedId)){
+        res.status(404).send();
+    }
+    Todo.findById(requestedId).then(
+        (todo) => {
+            if(!todo){
+                res.status(404).send();
+            } else {
+                // Try and always send stuff back in an object because it leaves more room for modification :P
+                res.send({todo});
+            }
+        },
+    ).catch((e) => {
+        res.status(400).send();
+    })  
 })
 
 
