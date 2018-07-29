@@ -1,3 +1,4 @@
+const config = require("./config/config");
 
 const _ = require("lodash");
 const express = require("express");
@@ -15,7 +16,7 @@ var app = express();
 
 // Will only be set if the app IS running on Heroku,
 // It WONT be set if the app is running locally
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 // app.user creates our middleware from the bodyParser.json function
 app.use(bodyParser.json());
