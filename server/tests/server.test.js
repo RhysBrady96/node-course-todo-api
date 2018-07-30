@@ -4,38 +4,17 @@ const {ObjectID} = require("mongodb");
 
 const {app} = require("./../server");
 const {Todo} = require("./../models/Todo");
+const {User} = require("./../models/User");
 
+const{todos, populateTodos, users, populateUsers} = require("./seed/seed");
 
-// Dummy todos, act as seed data so we can test things like read, delete, and modify
-const todos = [
-    {
-        _id : new ObjectID(),
-        text : "First test todo"
-    },
-    {
-        _id : new ObjectID(),
-        text : "Second test todo"
-    },
-    {
-        _id : new ObjectID(),
-        text : "Third test todo", 
-        completed : true,
-        completedAt : 333
-    }
-]
 
 
 
 // BeforeEach runs before EVERY TEST-CASE, only moves along once we call "done"
-beforeEach((done) => {
-    // Removes all documents from the Todo collection
-    Todo.remove({}).then(
-        () => {
-            // adds the dummy documents into the Collection
-            return Todo.insertMany(todos);
-        }
-    ).then(() => done())
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
+
 
 describe("POST /todos", () => {
     // REMEMBER: "done" parameter specifies that the test is using a Promise
@@ -196,5 +175,79 @@ describe("PATCH /todos/:id", () => {
                 expect(res.body.todo.completedAt).toBeFalsy();
             })
             .end(done)
+    });
+})
+
+describe("GET /users/me", () => {
+    it("Should return a user if authenticated (good token)", (done) => {
+        request(app)
+            .get("/users/me")
+            .set("x-auth", users[0].tokens[0].token)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body._id).toBe(users[0]._id.toHexString());
+                expect(res.body.email).toBe(users[0].email);
+            })
+            .end(done);
+    });
+
+    it("Should return a 401 if not authenticated (Empty Token provided)", (done) => {
+        request(app)
+            .get("/users/me")
+            .expect(401)
+            .expect((res) => {
+                expect(res.body).toEqual({});
+            })
+            .end(done);
+    })
+});
+
+describe("POST /users", () => {
+    it("Should create a user if valid", (done) => {
+        var email = "example@example.com";
+        var password = "123abc123";
+
+        request(app)
+            .post("/users")
+            .send({email, password})
+            .expect(200)
+            .expect((res) => {
+                expect(res.headers["x-auth"]).toBeTruthy();
+                expect(res.body._id).toBeTruthy();
+                expect(res.body.email).toBe(email);
+            })
+            .end((err) => {
+                if(err) {
+                    return done(err);
+                }
+                User.findOne({email}).then( (user) => {
+                    expect(user).toBeTruthy();
+                    // Here, we can check if we are saving the hashed values rather than plaintext
+                    expect(user.password).not.toBe(password);
+                    done();
+                })
+            });
+    });
+
+    it("Should return validation errors if request is invalid", (done) => {
+        var email = "invalidemail";
+        var password = "inv";
+
+        request(app)
+            .post("/users")
+            .send({email, password})
+            .expect(400)
+            .end(done)
+    });
+
+    it("Should not create user if email in use already", (done) => {
+        var email = users[0].email;
+        var password = "123abc123";
+
+        request(app)
+            .post("/users")
+            .send({email, password})
+            .expect(400)
+            .end(done);
     });
 })
