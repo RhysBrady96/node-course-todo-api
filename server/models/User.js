@@ -57,6 +57,24 @@ UserSchema.methods.generateAuthToken = function () {
     });
 }
 
+// Below is an example of a "Model method" (Static method)
+UserSchema.statics.findByToken = function (token) {
+    // In the case of statics, "this" references the model itself, rather than a model instance
+    var User = this;
+    var decoded;
+    try {
+        decoded = jwt.verify(token, "abc123");
+    } catch (e) {
+        return Promise.reject();
+    }
+
+    return User.findOne({
+        "_id" : decoded._id,
+        "tokens.token" : token,
+        "tokens.access" : "auth"
+    })
+}
+
 var User = mongoose.model("User", UserSchema);
 
 // The tokens property is actually a feature in MongoDB

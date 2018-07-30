@@ -11,6 +11,7 @@ const {ObjectID} = require("mongodb");
 var {mongoose} = require("./db/mongoose");
 var {Todo} = require("./models/Todo");
 var {User} =require("./models/User");
+var {authenticate} = require("./middleware/authenticate");
 
 var app = express();
 
@@ -138,7 +139,16 @@ app.post("/users", (req, res) => {
     .catch((e) => {
         res.status(400).send(e);
     })
-})
+});
+
+
+
+
+// This route is gonna require authentication, so the user needs a valid x-auth token
+// The "authenticate" paramaeter is actually a middleware function
+app.get("/users/me", authenticate, (req, res) => {
+    res.send(req.user);
+});
 
 
 
