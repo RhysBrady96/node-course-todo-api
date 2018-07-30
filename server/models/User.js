@@ -3,6 +3,8 @@ const validator = require("validator");
 const jwt  = require("jsonwebtoken");
 const _ = require("lodash");
 
+const bcrypt = require("bcryptjs");
+
 var UserSchema = new mongoose.Schema({
     email : {
         type: String,
@@ -74,6 +76,23 @@ UserSchema.statics.findByToken = function (token) {
         "tokens.access" : "auth"
     })
 }
+
+// REMEMBER: If you dont provide AND call "next()" then the middleware is never gonna complete
+UserSchema.pre("save", function(next) {
+    var user = this;
+    // Remember: We only wanna encrypt the password if it was only just modified 
+    if(user.isModified("password")) {
+        bcrypt.genSalt(10, (err, salt) => {
+            bcrypt.hash(user.password, salt, (err, hash) => {
+                user.password = hash;
+                next();
+            })
+        })
+    } else {
+        next();
+    }
+})
+
 
 var User = mongoose.model("User", UserSchema);
 

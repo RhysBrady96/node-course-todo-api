@@ -1,5 +1,10 @@
 var {User} = require("./../models/User");
 
+
+// Middleware basically is just code that runs before or after a specified event
+
+
+
 // Middleware that will authenticate user requests before processing them
 // makes routes private
 // Middleware 3 arguments (actual route is NOT gonna run unless next() gets called)
