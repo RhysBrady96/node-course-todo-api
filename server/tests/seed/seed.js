@@ -4,23 +4,6 @@ const jwt = require("jsonwebtoken");
 const {Todo} = require("./../../models/Todo");
 const {User} = require("./../../models/User");
 
-// Dummy todos, act as seed data so we can test things like read, delete, and modify
-const todos = [
-    {
-        _id : new ObjectID(),
-        text : "First test todo"
-    },
-    {
-        _id : new ObjectID(),
-        text : "Second test todo"
-    },
-    {
-        _id : new ObjectID(),
-        text : "Third test todo", 
-        completed : true,
-        completedAt : 333
-    }
-];
 
 const user1ID = new ObjectID();
 const user2ID = new ObjectID();
@@ -38,6 +21,33 @@ const users = [
         _id : user2ID,
         email : "eddy@example.com",
         password : "user2Pass",
+        tokens : [{
+            access : "auth",
+            token : jwt.sign({_id : user2ID, access: "auth"}, "abc123").toString()
+        }]
+    }
+];
+
+
+
+// Dummy todos, act as seed data so we can test things like read, delete, and modify
+const todos = [
+    {
+        _id : new ObjectID(),
+        text : "First test todo",
+        _creator : user1ID
+    },
+    {
+        _id : new ObjectID(),
+        text : "Second test todo",
+        _creator : user2ID
+    },
+    {
+        _id : new ObjectID(),
+        text : "Third test todo", 
+        completed : true,
+        completedAt : 333,
+        _creator : user1ID
     }
 ];
 

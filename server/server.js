@@ -23,9 +23,12 @@ const port = process.env.PORT;
 app.use(bodyParser.json());
 
 // This is the "Create" in standard CRUD operations
-app.post("/todos", (req, res) => {
+// Remember, authenticate is a middlware function that can change the req and res objects 
+// In this case middleware/authenticate.js changes the "req" object so that it also contains the logged in user
+app.post("/todos", authenticate, (req, res) => {
     var todo = new Todo({
         text : req.body.text,
+        _creator : req.user._id
     });
 
     todo.save().then(
@@ -39,8 +42,12 @@ app.post("/todos", (req, res) => {
 });
 
 
-app.get("/todos", (req, res) => {
-    Todo.find().then( 
+app.get("/todos", authenticate, (req, res) => {
+    // The query in Todo.find means that only the todos with the creator being the 
+    // logged in user, will be returned
+    Todo.find({
+        _creator : req.user._id
+    }).then( 
         (todos) => {
             res.send({
                 todos
@@ -55,12 +62,15 @@ app.get("/todos", (req, res) => {
 // The text after the colon creates a "todoId" variable, which allows user to specify a certain ID
 // They want to search for
 // It is a search parameter
-app.get("/todos/:todoId", (req, res) => {
+app.get("/todos/:todoId", authenticate, (req, res) => {
     var requestedId = req.params.todoId;
     if(!ObjectID.isValid(requestedId)){
         res.status(404).send();
     }
-    Todo.findById(requestedId).then(
+    Todo.findOne({
+        _id : requestedId,
+        _creator: req.user._id
+    }).then(
         (todo) => {
             if(!todo){
                 res.status(404).send();
@@ -76,12 +86,15 @@ app.get("/todos/:todoId", (req, res) => {
 
 
 
-app.delete("/todos/:todoId", (req,res) => {
+app.delete("/todos/:todoId", authenticate, (req,res) => {
     var requestedId = req.params.todoId;
     if(!ObjectID.isValid(requestedId)){
         return res.status(404).send();
     }
-    Todo.findByIdAndRemove(requestedId).then(
+    Todo.findOneAndRemove({
+        _id : requestedId,
+        _creator: req.user._id 
+    }).then(
         // Where doc is the todo to delete
         (doc) => {
             if(!doc) {
@@ -96,7 +109,7 @@ app.delete("/todos/:todoId", (req,res) => {
     })
 });
 
-app.patch("/todos/:todoId", (req, res) => {
+app.patch("/todos/:todoId", authenticate, (req, res) => {
     var id = req.params.todoId;
     // _.pick is  a lodash function that takes an object, and an array of properties that you want to pull off
     // (If they exist) 
@@ -114,7 +127,7 @@ app.patch("/todos/:todoId", (req, res) => {
     }
 
     // Using the $set keyword again, like in cthe mongodb-update file
-    Todo.findByIdAndUpdate(id, { $set : body}, {new : true}).then( (todo) => {
+    Todo.findOneAndUpdate({_id : id, _creator : req.user._id}, { $set : body}, {new : true}).then( (todo) => {
         if(!todo) {
             return res.status(404).send();
         }
