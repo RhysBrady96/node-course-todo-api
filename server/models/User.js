@@ -75,6 +75,26 @@ UserSchema.statics.findByToken = function (token) {
         "tokens.token" : token,
         "tokens.access" : "auth"
     })
+};
+
+UserSchema.statics.findByCredentials = function (email, password) {
+    var User = this;
+    return User.findOne({email}).then( (user) => {
+        if(!user) {
+            // This would get caught further up the call stack (in server.js)
+            return Promise.reject();
+        }
+        // PROBLEM: bcrypt only supports callbacks, NOT promises
+        return new Promise( (resolve, reject) => {
+            bcrypt.compare(password, user.password, (err, result) => {
+                if(result){
+                    resolve(user);
+                } else {
+                    reject();
+                }
+            });
+        })
+    });
 }
 
 // REMEMBER: If you dont provide AND call "next()" then the middleware is never gonna complete
